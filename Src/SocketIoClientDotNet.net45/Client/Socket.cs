@@ -44,7 +44,7 @@ namespace Quobject.SocketIoClientDotNet.Client
         private int Ids;
         private string Nsp;
         private Manager _io;
-        private ImmutableDictionary<int, IAck> Acks = ImmutableDictionary.Create<int, IAck>();
+        private Dictionary<int, IAck> Acks = new Dictionary<int, IAck>();
         private ImmutableQueue<On.IHandle> Subs;
         private ImmutableQueue<List<object>> ReceiveBuffer = ImmutableQueue.Create<List<object>>();
         private ImmutableQueue<Parser.Packet> SendBuffer = ImmutableQueue.Create<Parser.Packet>();
@@ -116,7 +116,7 @@ namespace Quobject.SocketIoClientDotNet.Client
             if (lastArg is IAck)
             {
                 log.Info(string.Format("emitting packet with ack id {0}", Ids));
-                Acks = Acks.Add(Ids, (IAck)lastArg);
+                Acks.Add(Ids, (IAck)lastArg);
                 jsonArgs = Parser.Packet.Remove(jsonArgs, jsonArgs.Count - 1);
                 packet.Data = jsonArgs;
                 packet.Id = Ids++;
@@ -147,8 +147,8 @@ namespace Quobject.SocketIoClientDotNet.Client
             var jarray = new JArray(_args);
             var packet = new Packet(Parser.Parser.EVENT, jarray);
 
-            log.Info(string.Format("emitting packet with ack id {0}", Ids));
-            Acks = Acks.Add(Ids, ack);
+            Console.WriteLine(string.Format("emitting packet with ack id {0} for event {1}", Ids, eventString));
+            Acks.Add(Ids, ack);
             packet.Id = Ids++;
 
             Packet(packet);
@@ -300,9 +300,9 @@ namespace Quobject.SocketIoClientDotNet.Client
         private void OnAck(Parser.Packet packet)
         {
             var log = LogManager.GetLogger(Global.CallerName());
-            log.Info(string.Format("calling ack {0} with {1}", packet.Id, packet.Data));
+            Console.WriteLine(string.Format("calling ack {0} with {1}", packet.Id, packet.Data));
             var fn = Acks[packet.Id];
-            Acks = Acks.Remove(packet.Id);
+            Acks.Remove(packet.Id);
 
             var args = packet.GetDataAsList();
 
